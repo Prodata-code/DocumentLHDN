@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rekod LHDN</title>
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e3a8a',
+                        secondary: '#3b82f6',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans h-screen flex overflow-hidden">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-40">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-6">
+                <i class="fas fa-file-invoice-dollar text-primary text-5xl mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Sistem Rekod LHDN</h2>
+                <p class="text-gray-500 text-sm mt-2">Sila log masuk untuk meneruskan</p>
+            </div>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">ID Pengguna</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary" id="username" type="text" placeholder="Masukkan ID" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Kata Laluan</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-secondary" id="password" type="password" placeholder="********" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-primary hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition duration-300" type="submit" id="login-btn">
+                        Log Masuk
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application (Hidden by default) -->
+    <div id="main-app" class="hidden flex h-full w-full">
+
+        <!-- Sidebar Navigation -->
+        <aside class="bg-primary text-white w-64 flex-shrink-0 hidden md:flex flex-col transition-all duration-300" id="sidebar">
+            <div class="p-6 flex items-center justify-center border-b border-blue-800">
+                <i class="fas fa-file-invoice-dollar text-2xl mr-3"></i>
+                <h1 class="text-xl font-bold tracking-wider">LHDN System</h1>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="#" onclick="showScreen('dashboard')" class="nav-item flex items-center px-4 py-3 bg-blue-800 rounded-lg transition-colors" data-target="dashboard">
+                    <i class="fas fa-chart-pie w-6"></i>
+                    <span>Ringkasan Dashboard</span>
+                </a>
+                <a href="#" onclick="showScreen('income-expense')" class="nav-item flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition-colors" data-target="income-expense">
+                    <i class="fas fa-money-bill-wave w-6"></i>
+                    <span>Pendapatan & Belanja</span>
+                </a>
+                <a href="#" onclick="showScreen('zakat-insurance')" class="nav-item flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition-colors" data-target="zakat-insurance">
+                    <i class="fas fa-hands-holding-circle w-6"></i>
+                    <span>Insurans & Zakat</span>
+                </a>
+                <a href="#" onclick="showScreen('assets')" class="nav-item flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition-colors" data-target="assets">
+                    <i class="fas fa-car w-6"></i>
+                    <span>Senarai Aset</span>
+                </a>
+                <a href="#" onclick="showScreen('reports')" class="nav-item flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition-colors" data-target="reports">
+                    <i class="fas fa-file-alt w-6"></i>
+                    <span>Laporan LHDN</span>
+                </a>
+                <a href="#" onclick="showScreen('master-data')" class="nav-item flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition-colors" data-target="master-data">
+                    <i class="fas fa-database w-6"></i>
+                    <span>Master Data</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-blue-800">
+                <a href="#" onclick="logout()" class="flex items-center px-4 py-2 text-red-300 hover:text-white hover:bg-red-600 rounded transition-colors">
+                    <i class="fas fa-sign-out-alt w-6"></i>
+                    <span>Log Keluar</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="md:hidden fixed bottom-0 w-full bg-primary text-white flex justify-around p-3 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]" id="mobile-nav">
+             <a href="#" onclick="showScreen('dashboard')" class="flex flex-col items-center text-xs opacity-100" data-target="dashboard">
+                <i class="fas fa-chart-pie text-xl mb-1"></i> Dashboard
+            </a>
+            <a href="#" onclick="showScreen('income-expense')" class="flex flex-col items-center text-xs opacity-50 hover:opacity-100" data-target="income-expense">
+                <i class="fas fa-money-bill-wave text-xl mb-1"></i> Kewangan
+            </a>
+            <a href="#" onclick="showScreen('assets')" class="flex flex-col items-center text-xs opacity-50 hover:opacity-100" data-target="assets">
+                <i class="fas fa-car text-xl mb-1"></i> Aset
+            </a>
+             <a href="#" onclick="showScreen('master-data')" class="flex flex-col items-center text-xs opacity-50 hover:opacity-100" data-target="master-data">
+                <i class="fas fa-bars text-xl mb-1"></i> Menu
+            </a>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800" id="screen-title">Ringkasan Dashboard</h2>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-500 text-sm mr-4 hidden sm:block">Status: <span id="sync-status" class="text-green-500 font-bold">Online</span></span>
+                    <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold">
+                        A
+                    </div>
+                </div>
+            </header>
+
+            <!-- Screens Container -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50 pb-24 md:pb-6" id="screens-container">
+
+                <!-- Dashboard Screen -->
+                <div id="screen-dashboard" class="screen-content">
+                    <!-- Dashboard content will be injected by JS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                            <h3 class="text-gray-500 text-sm font-medium">Jumlah Pendapatan</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-2" id="dash-income">RM 0.00</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+                            <h3 class="text-gray-500 text-sm font-medium">Jumlah Perbelanjaan</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-2" id="dash-expense">RM 0.00</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+                            <h3 class="text-gray-500 text-sm font-medium">Zakat & Insurans</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-2" id="dash-zakat">RM 0.00</p>
+                        </div>
+                         <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                            <h3 class="text-gray-500 text-sm font-medium">Untung Bersih</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-2" id="dash-profit">RM 0.00</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-700">Aliran Tunai (Tahunan)</h3>
+                            <canvas id="cashflowChart" height="250"></canvas>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-700">Pecahan Perbelanjaan</h3>
+                            <canvas id="expenseChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income Expense Screen -->
+                <div id="screen-income-expense" class="screen-content" style="display: none;">
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Tambah Rekod Baru</h3>
+                        <form id="form-income-expense" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Tarikh</label>
+                                <input type="date" id="ie-date" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Jenis</label>
+                                <select id="ie-type" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                                    <option value="Pendapatan">Pendapatan</option>
+                                    <option value="Perbelanjaan">Perbelanjaan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Kategori</label>
+                                <select id="ie-category" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                                    <option value="">Pilih Kategori...</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Jumlah (RM)</label>
+                                <input type="number" step="0.01" id="ie-amount" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" placeholder="0.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Nota (Pilihan)</label>
+                                <input type="text" id="ie-note" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" placeholder="Catatan...">
+                            </div>
+                            <div class="lg:col-span-5 flex justify-end mt-2">
+                                <button type="submit" class="bg-secondary hover:bg-blue-600 text-white px-6 py-2 rounded shadow transition-colors">
+                                    <i class="fas fa-save mr-2"></i>Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 class="text-lg font-semibold text-gray-700">Sejarah Rekod</h3>
+                            <input type="text" id="search-ie" placeholder="Cari..." class="border rounded px-3 py-1 text-sm focus:ring-secondary">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-600 text-sm">
+                                        <th class="p-3 border-b">Tarikh</th>
+                                        <th class="p-3 border-b">Jenis</th>
+                                        <th class="p-3 border-b">Kategori</th>
+                                        <th class="p-3 border-b">Nota</th>
+                                        <th class="p-3 border-b text-right">Jumlah (RM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-ie" class="text-sm">
+                                    <tr><td colspan="5" class="text-center p-4 text-gray-500">Memuatkan data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zakat & Insurance Screen -->
+                <div id="screen-zakat-insurance" class="screen-content" style="display: none;">
+                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Tambah Rekod Zakat / Insurans</h3>
+                        <form id="form-zakat" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Tarikh</label>
+                                <input type="date" id="z-date" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Kategori</label>
+                                <select id="z-category" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                                    <option value="Zakat Perniagaan">Zakat Perniagaan</option>
+                                    <option value="Zakat Pendapatan">Zakat Pendapatan</option>
+                                    <option value="Insurans Nyawa">Insurans Nyawa</option>
+                                    <option value="Insurans Perubatan">Insurans Perubatan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Institusi / Syarikat</label>
+                                <input type="text" id="z-institution" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required placeholder="Lembaga Zakat / AIA / dll">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">No Polisi / Resit</label>
+                                <input type="text" id="z-receipt" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Jumlah (RM)</label>
+                                <input type="number" step="0.01" id="z-amount" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" placeholder="0.00" required>
+                            </div>
+                            <div class="lg:col-span-5 flex justify-end mt-2">
+                                <button type="submit" class="bg-secondary hover:bg-blue-600 text-white px-6 py-2 rounded shadow transition-colors">
+                                    <i class="fas fa-save mr-2"></i>Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 class="text-lg font-semibold text-gray-700">Sejarah Bayaran</h3>
+                            <input type="text" id="search-zakat" placeholder="Cari..." class="border rounded px-3 py-1 text-sm focus:ring-secondary">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-600 text-sm">
+                                        <th class="p-3 border-b">Tarikh</th>
+                                        <th class="p-3 border-b">Kategori</th>
+                                        <th class="p-3 border-b">Institusi</th>
+                                        <th class="p-3 border-b">No Polisi / Resit</th>
+                                        <th class="p-3 border-b text-right">Jumlah (RM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-zakat" class="text-sm">
+                                    <tr><td colspan="5" class="text-center p-4 text-gray-500">Memuatkan data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assets Screen -->
+                <div id="screen-assets" class="screen-content" style="display: none;">
+                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Tambah Aset Syarikat</h3>
+                        <form id="form-asset" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Tarikh Beli</label>
+                                <input type="date" id="a-date" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Kategori</label>
+                                <select id="a-category" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required>
+                                    <option value="">Pilih Kategori...</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Nama Aset</label>
+                                <input type="text" id="a-name" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" required placeholder="Cth: Laptop Dell">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Harga Beli (RM)</label>
+                                <input type="number" step="0.01" id="a-price" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" placeholder="0.00" required>
+                            </div>
+                             <div>
+                                <label class="block text-sm text-gray-600 mb-1">Nota</label>
+                                <input type="text" id="a-note" class="w-full border rounded px-3 py-2 focus:ring-secondary focus:border-secondary" placeholder="Catatan...">
+                            </div>
+                            <div class="lg:col-span-5 flex justify-end mt-2">
+                                <button type="submit" class="bg-secondary hover:bg-blue-600 text-white px-6 py-2 rounded shadow transition-colors">
+                                    <i class="fas fa-save mr-2"></i>Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 class="text-lg font-semibold text-gray-700">Senarai Aset</h3>
+                            <input type="text" id="search-assets" placeholder="Cari..." class="border rounded px-3 py-1 text-sm focus:ring-secondary">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-600 text-sm">
+                                        <th class="p-3 border-b">Tarikh Beli</th>
+                                        <th class="p-3 border-b">Kategori</th>
+                                        <th class="p-3 border-b">Nama Aset</th>
+                                        <th class="p-3 border-b">Nota</th>
+                                        <th class="p-3 border-b text-right">Harga (RM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-assets" class="text-sm">
+                                    <tr><td colspan="5" class="text-center p-4 text-gray-500">Memuatkan data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Screen -->
+                <div id="screen-reports" class="screen-content" style="display: none;">
+                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6 no-print">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Jana Laporan</h3>
+                        <div class="flex flex-wrap gap-4 items-end">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Tahun</label>
+                                <select id="report-year" class="border rounded px-3 py-2 w-32 focus:ring-secondary focus:border-secondary">
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </div>
+                            <button onclick="generateReport()" class="bg-primary hover:bg-blue-800 text-white px-6 py-2 rounded shadow transition-colors">
+                                <i class="fas fa-sync-alt mr-2"></i>Jana
+                            </button>
+                            <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded shadow transition-colors ml-auto">
+                                <i class="fas fa-print mr-2"></i>Cetak PDF
+                            </button>
+                        </div>
+                     </div>
+
+                     <!-- Printable Report Area -->
+                     <div id="print-area" class="bg-white rounded-xl shadow-sm p-8">
+                         <div class="text-center mb-8 border-b-2 border-gray-800 pb-4">
+                             <h1 class="text-2xl font-bold text-gray-900 uppercase">Penyata Pendapatan & Perbelanjaan</h1>
+                             <p class="text-gray-600">Bagi Tahun Berakhir 31 Disember <span id="display-report-year">2026</span></p>
+                         </div>
+
+                         <div class="mb-6">
+                             <h3 class="font-bold text-lg mb-2 text-primary border-b">PENDAPATAN</h3>
+                             <table class="w-full text-sm mb-2" id="report-income-table">
+                                 <!-- Injected -->
+                             </table>
+                             <div class="flex justify-between font-bold text-gray-800 border-t border-b py-2 mt-2">
+                                 <span>JUMLAH PENDAPATAN (A)</span>
+                                 <span id="report-total-income">RM 0.00</span>
+                             </div>
+                         </div>
+
+                         <div class="mb-6">
+                             <h3 class="font-bold text-lg mb-2 text-red-600 border-b">TOLAK: PERBELANJAAN</h3>
+                             <table class="w-full text-sm mb-2" id="report-expense-table">
+                                 <!-- Injected -->
+                             </table>
+                             <div class="flex justify-between font-bold text-gray-800 border-t border-b py-2 mt-2">
+                                 <span>JUMLAH PERBELANJAAN (B)</span>
+                                 <span id="report-total-expense">RM 0.00</span>
+                             </div>
+                         </div>
+
+                         <div class="mb-6">
+                             <div class="flex justify-between font-bold text-xl text-green-700 bg-gray-100 p-3 rounded">
+                                 <span>PENDAPATAN BERSIH (A - B)</span>
+                                 <span id="report-net-profit">RM 0.00</span>
+                             </div>
+                         </div>
+
+                         <div class="grid grid-cols-2 gap-8 mt-8">
+                            <div>
+                                <h3 class="font-bold text-md mb-2 text-gray-700 border-b">MAKLUMAT POTONGAN (CUKAI)</h3>
+                                <table class="w-full text-sm" id="report-deductions-table">
+                                    <!-- Injected -->
+                                </table>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-md mb-2 text-gray-700 border-b">RINGKASAN ASET KESELURUHAN</h3>
+                                <div class="flex justify-between text-sm py-1">
+                                    <span>Jumlah Nilai Aset Dibeli</span>
+                                    <span class="font-bold" id="report-total-assets">RM 0.00</span>
+                                </div>
+                            </div>
+                         </div>
+                     </div>
+                </div>
+
+                <!-- Master Data Screen -->
+                <div id="screen-master-data" class="screen-content" style="display: none;">
+                     <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-semibold text-gray-700 border-b pb-2">Pengurusan Master Data</h3>
+                            <p class="text-sm text-gray-500 mt-2">Sila kemaskini <strong>Google Sheet</strong> pada tab <strong>MasterData</strong> secara terus untuk menambah atau membuang kategori. Data di bawah akan disegerakkan (sync) secara automatik.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <!-- Income Categories -->
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-bold text-green-600 mb-3"><i class="fas fa-plus-circle mr-2"></i>Kategori Pendapatan</h4>
+                                <ul id="md-income-list" class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                    <li>Memuatkan...</li>
+                                </ul>
+                            </div>
+
+                            <!-- Expense Categories -->
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-bold text-red-600 mb-3"><i class="fas fa-minus-circle mr-2"></i>Kategori Perbelanjaan</h4>
+                                <ul id="md-expense-list" class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                    <li>Memuatkan...</li>
+                                </ul>
+                            </div>
+
+                            <!-- Asset Categories -->
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-bold text-blue-600 mb-3"><i class="fas fa-car mr-2"></i>Kategori Aset</h4>
+                                <ul id="md-asset-list" class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                                    <li>Memuatkan...</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="fetchMasterData()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded border shadow-sm transition-colors text-sm">
+                                <i class="fas fa-sync-alt mr-2"></i>Segarkan Data (Sync)
+                            </button>
+                        </div>
+                     </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
