@@ -33,9 +33,20 @@ async function apiCall(action, data = {}) {
         };
 
         const payload = { action, ...authData, ...data };
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
+
+        // Convert payload to URL search parameters for GET request
+        const params = new URLSearchParams();
+        for (const key in payload) {
+            // Stringify objects/arrays before sending in URL
+            if (typeof payload[key] === 'object') {
+                params.append(key, JSON.stringify(payload[key]));
+            } else {
+                params.append(key, payload[key]);
+            }
+        }
+
+        const response = await fetch(`${GAS_URL}?${params.toString()}`, {
+            method: 'GET'
         });
 
         const result = await response.json();

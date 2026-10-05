@@ -1,20 +1,20 @@
-const SPREADSHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
-
-// Handle incoming POST requests from the HTML frontend
-function doPost(e) {
+// Handle incoming GET requests from the HTML frontend (Bypasses POST restrictions)
+function doGet(e) {
   try {
-    // Parse the JSON payload sent by the frontend
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action;
+    // Parse the payload sent by the frontend via URL parameters
+    const action = e.parameter.action;
+    const username = e.parameter.username;
+    const password = e.parameter.password;
+
     let result = {};
 
     // 1. Authenticate Request for EVERY action
-    if (!data.username || !data.password) {
+    if (!username || !password) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, message: 'Missing credentials.' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    const authCheck = loginUser(data.username, data.password);
+    const authCheck = loginUser(username, password);
     if (!authCheck.success) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, message: 'Unauthorized.' }))
         .setMimeType(ContentService.MimeType.JSON);
@@ -26,9 +26,13 @@ function doPost(e) {
     } else if (action === 'getDashboard') {
       result = getDashboardData();
     } else if (action === 'addRecord') {
-      result = addRecord(data.sheetName, data.record);
+      // For addRecord, the record array is passed as a JSON string in the URL
+      const sheetName = e.parameter.sheetName;
+      const record = JSON.parse(e.parameter.record);
+      result = addRecord(sheetName, record);
     } else if (action === 'getRecords') {
-      result = getRecords(data.sheetName);
+      const sheetName = e.parameter.sheetName;
+      result = getRecords(sheetName);
     } else {
       result = { success: false, message: 'Invalid action' };
     }
@@ -42,19 +46,13 @@ function doPost(e) {
   }
 }
 
-// Enable CORS for GET requests (useful for a quick ping test)
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({ success: true, message: "GAS Web App is running. Use POST to interact." }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
 // Function to handle user authentication
 function loginUser(username, password) {
+  // Use getActiveSpreadsheet() so we don't need hardcoded IDs anymore
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users");
   if (!sheet) return { success: false, message: "Sila pastikan sheet 'Users' wujud." };
 
   const data = sheet.getDataRange().getValues();
-  // Assume Row 1 is header: [Username, Password, Name, Role]
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] == username && data[i][1] == password) {
       return {
@@ -75,11 +73,9 @@ function getDashboardData() {
   let totalZakatInsurance = 0;
   let totalAssets = 0;
 
-  // 1. Income & Expense
   const incomeSheet = ss.getSheetByName("IncomeExpense");
   if (incomeSheet && incomeSheet.getLastRow() > 1) {
     const data = incomeSheet.getDataRange().getValues();
-    // Headers: [Tarikh, Jenis, Kategori, Jumlah (RM), Nota]
     for (let i = 1; i < data.length; i++) {
       const type = data[i][1];
       const amount = parseFloat(data[i][3]) || 0;
@@ -88,21 +84,17 @@ function getDashboardData() {
     }
   }
 
-  // 2. Zakat & Insurance
   const zakatSheet = ss.getSheetByName("ZakatInsurance");
   if (zakatSheet && zakatSheet.getLastRow() > 1) {
     const data = zakatSheet.getDataRange().getValues();
-    // Headers: [Tarikh, Kategori, Institusi, No Polisi, Jumlah (RM)]
     for (let i = 1; i < data.length; i++) {
       totalZakatInsurance += parseFloat(data[i][4]) || 0;
     }
   }
 
-  // 3. Assets
   const assetsSheet = ss.getSheetByName("Assets");
   if (assetsSheet && assetsSheet.getLastRow() > 1) {
     const data = assetsSheet.getDataRange().getValues();
-    // Headers: [Tarikh, Kategori, Nama Aset, Harga Beli (RM), Nota]
     for (let i = 1; i < data.length; i++) {
       totalAssets += parseFloat(data[i][3]) || 0;
     }
@@ -122,7 +114,7 @@ function getDashboardData() {
   };
 }
 
-// Function to append a new row to a specific sheet
+// Function to append a new row
 function addRecord(sheetName, recordArray) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) return { success: false, message: `Sila pastikan sheet '${sheetName}' wujud.` };
@@ -131,13 +123,13 @@ function addRecord(sheetName, recordArray) {
   return { success: true, message: "Rekod berjaya ditambah." };
 }
 
-// Function to read all rows from a specific sheet
+// Function to read all rows
 function getRecords(sheetName) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) return { success: false, message: `Sila pastikan sheet '${sheetName}' wujud.` };
 
   if (sheet.getLastRow() <= 1) {
-    return { success: true, data: [] }; // Empty sheet (only headers)
+    return { success: true, data: [] };
   }
 
   const data = sheet.getDataRange().getDisplayValues();
@@ -155,13 +147,11 @@ function getRecords(sheetName) {
   return { success: true, data: rows };
 }
 
-// Function specifically to update Master Data drop-downs
-// This can be expanded later if needed
+// Function to update Master Data
 function getMasterData() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MasterData");
   if (!sheet) return { success: false, message: "Sheet MasterData tidak dijumpai" };
 
-  // Example structure: Column A = Income Categories, Col B = Expense Categories, Col C = Asset Categories
   const data = sheet.getDataRange().getDisplayValues();
   let result = {
     incomeCategories: [],
