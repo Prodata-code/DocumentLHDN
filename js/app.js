@@ -130,11 +130,11 @@ function showScreen(screenId) {
     // Update Sidebar highlighting
     document.querySelectorAll('.nav-item').forEach(item => {
         if (item.dataset.target === screenId) {
-            item.classList.add('bg-blue-800');
-            item.classList.remove('hover:bg-blue-800');
+            item.classList.add('bg-indigo-500/10', 'text-indigo-400');
+            item.classList.remove('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
         } else {
-            item.classList.remove('bg-blue-800');
-            item.classList.add('hover:bg-blue-800');
+            item.classList.remove('bg-indigo-500/10', 'text-indigo-400');
+            item.classList.add('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
         }
     });
 
@@ -142,11 +142,11 @@ function showScreen(screenId) {
     const mobileNavs = document.getElementById('mobile-nav').querySelectorAll('a');
     mobileNavs.forEach(nav => {
         if(nav.dataset.target === screenId) {
-            nav.classList.remove('opacity-50');
-            nav.classList.add('opacity-100');
+            nav.classList.add('text-indigo-400');
+            nav.classList.remove('hover:text-slate-200');
         } else {
-            nav.classList.add('opacity-50');
-            nav.classList.remove('opacity-100');
+            nav.classList.remove('text-indigo-400');
+            nav.classList.add('hover:text-slate-200');
         }
     });
 
